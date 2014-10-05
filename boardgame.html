@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Mix and Match Game</title>
+	<script type="text/javascript" src="jquery.js"></script>
+	<style>
+#main {
+	margin: 0px auto;
+	width:960px;
+	font-family: "arial";
+}
+
+h1 {
+	text-align: center;
+}
+
+#board {
+	background: lightgray;
+	width: 415px;
+	height: 415px;
+	padding: 10px;
+	margin: 0px auto;
+}
+
+#board div {
+	display:inline-block;
+	background: red;
+	width: 100px;
+	height: 100px;
+	cursor: pointer;
+}
+
+#timer {
+	text-align: center;
+	margin-top: 10px;
+	font-size: 60px;
+	font-weight: bold;
+	color: green;
+}
+	</style>
+</head>
+<body>
+	<div id="main">
+		<h1>Super Hero Logo Match Game</h1>
+<!-- THE BOARD CONTAINER -->		
+		<div id="board">
+			<div class="cover"><img src="images/hidden.png" alt=hidden card" /></div>
+			<div class="cover"><img src="images/hidden.png" alt=hidden card" /></div>
+			<div class="cover"><img src="images/hidden.png" alt=hidden card" /></div>
+			<div class="cover"><img src="images/hidden.png" alt=hidden card" /></div>
+			<div class="cover"><img src="images/hidden.png" alt=hidden card" /></div>
+			<div class="cover"><img src="images/hidden.png" alt=hidden card" /></div>
+			<div class="cover"><img src="images/hidden.png" alt=hidden card" /></div>
+			<div class="cover"><img src="images/hidden.png" alt=hidden card" /></div>
+			<div class="cover"><img src="images/hidden.png" alt=hidden card" /></div>
+			<div class="cover"><img src="images/hidden.png" alt=hidden card" /></div>
+			<div class="cover"><img src="images/hidden.png" alt=hidden card" /></div>
+			<div class="cover"><img src="images/hidden.png" alt=hidden card" /></div>
+			<div class="cover"><img src="images/hidden.png" alt=hidden card" /></div>
+			<div class="cover"><img src="images/hidden.png" alt=hidden card" /></div>
+			<div class="cover"><img src="images/hidden.png" alt=hidden card" /></div>
+			<div class="cover"><img src="images/hidden.png" alt=hidden card" /></div>
+		</div>
+<!-- WHERE THE TIMER WILL BE DISPLAYED -->		
+		<div id="timer"></div>
+	</div>
+
+	<script>
+//DECLARING THE VARIABLES
+var heroes = ['images/aquaman.png','images/batman.png','images/green-lantern.png','images/hawkman.png','images/manhunter.png','images/superman.png','images/theflash.png','images/wonderwoman.png'];
+heroes = heroes.concat(heroes); //creates a 4x4 board
+var results = shuffle(heroes); //calls the shuffle function to randomize the array
+
+//cards that are pick from the src and index number
+var firstPick = '';
+var firstPickIndex = '';
+var secondPick = '';
+var secondPickIndex = '';
+
+//Timer Variables
+var timer = ''; //setTimeout
+var gameStatus = ''; //setInterval
+
+var setTime = 300; //game timer in seconds
+var clicks = 0; //records the click events and the logic behind it
+var gameStart = false; //game has not started until the first click is made
+var isActive = true; //When true the cards will be clickable
+
+
+
+//This function shuffles an array and returns it
+function shuffle(o){ 
+    for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+    return o;
+};
+
+//This function does all the logic behind checking if a card is match or not
+//Also will initialize the game timer
+$('#board').delegate('.cover','click', function(){
+	if(gameStart === false)
+	{
+		$('#timer').text(setTime); //Go to div timer and set the text for the time in setTime variable
+	    
+	    //This starts the countdown of the game to be finished
+	    gameStatus = setInterval(function(){
+			$timeDiv = $('#timer');
+			setTime -= 1;
+			$('#timer').text( setTime );
+			
+			// When the game timer reaches 0 it will end the game and all click functions
+			if(setTime === 0)
+			{
+				clearInterval(gameStatus);
+				isActive = false;
+				$timeDiv.text('Game Over');
+				$timeDiv.css('color','red');
+			}
+			
+			
+				
+		},1000);
+
+		gameStart = true;
+	}	
+
+
+	$index = $(this).index();
+
+	//Checks if the game is still active
+	if(isActive === true)
+	{
+		if(clicks === 0)
+		{
+			++clicks;
+		}	
+		//first image will be stored
+		if(clicks === 1)
+		{
+			$(this).find('img').attr('src', heroes[ $index ]);
+			$('#board div').eq( $index ).removeClass('cover').addClass('uncover');
+			firstPick = $(this).find('img').attr('src');
+			firstPickIndex = $index;
+			
+			clicks++;
+		}
+		//second image will be stored
+		else if(clicks === 2)
+		{
+			$(this).find('img').attr('src', heroes[ $index ]);
+			$('#board div').eq( $index ).removeClass('cover').addClass('uncover');
+			secondPick = $(this).find('img').attr('src');
+			secondPickIndex = $index;
+
+
+			//if the first card and second card matches let it stay
+			//it will also check if all cards are matched
+			if(firstPick === secondPick)
+			{
+				if($('.cover').length === 0)
+				{
+					clearInterval(gameStatus);
+					$('#timer').text('You Beat the Game in ' + (300 - setTime) + ' Seconds');
+				}	
+				clicks = 1; //reset the clicks
+			}
+			else
+			{
+				//set a timer to show the unmatched card for 1.5 sec before dissapears again
+				var timer = setTimeout(function(){
+					$('#board div').eq( firstPickIndex )
+					.removeClass('uncover')
+					.addClass('cover')
+					.find('img')
+					.attr('src','images/hidden.png');
+					
+					$('#board div').eq( secondPickIndex )
+					.removeClass('uncover')
+					.addClass('cover')
+					.find('img')
+					.attr('src', 'images/hidden.png');
+
+					clicks = 1;
+
+				}, 1000);
+				clicks++;
+			}	
+		}
+		//Anymore clicks and it will clear the timer and 
+		//reset the last two uncover card to be hidden again
+		else
+		{
+			clearTimeout(timer);
+
+			$('#board div').eq( firstPickIndex )
+			.removeClass('uncover')
+			.addClass('cover')
+			.find('img')
+			.attr('src','images/hidden.png');
+			
+			$('#board div').eq( secondPickIndex )
+			.removeClass('uncover')
+			.addClass('cover')
+			.find('img')
+			.attr('src', 'images/hidden.png');
+
+			clicks = 1;
+
+		}	
+	}	
+
+});
+
+	</script>
+
+</body>
+</html>
